@@ -3,10 +3,13 @@ import { Link, useParams, useHistory } from 'react-router-dom';
 
 import axios from 'axios';
 
+import DeleteMovieModal from './DeleteMovieModal';
+
 const Movie = (props) => {
   const { addToFavorites } = props;
 
   const [movie, setMovie] = useState('');
+  const [deleteModal, setDeleteModal] = useState(false);
 
   const { id } = useParams();
   const { push } = useHistory();
@@ -22,11 +25,17 @@ const Movie = (props) => {
       });
   }, [id]);
 
+  const handleModal = () => {
+    setDeleteModal(!deleteModal);
+  };
+
   const handleDelete = () => {
     axios
       .delete(`http://localhost:5000/api/movies/${id}`)
       .then((res) => {
+        props.removeFromFavorites(movie);
         props.deleteMovie(res.data);
+        setDeleteModal(false);
         push('/movies');
       })
       .catch((err) => {
@@ -34,8 +43,22 @@ const Movie = (props) => {
       });
   };
 
+  const cancelDelete = () => {
+    setDeleteModal(false);
+  };
+
+  const handleFavorite = () => {
+    props.addToFavorites(movie);
+  };
+
   return (
     <div className='modal-page col'>
+      {deleteModal && (
+        <DeleteMovieModal
+          handleDelete={handleDelete}
+          cancelDelete={cancelDelete}
+        />
+      )}
       <div className='modal-dialog'>
         <div className='modal-content'>
           <div className='modal-header'>
@@ -73,7 +96,9 @@ const Movie = (props) => {
               </section>
 
               <section>
-                <span className='m-2 btn btn-dark'>Favorite</span>
+                <span className='m-2 btn btn-dark' onClick={handleFavorite}>
+                  Favorite
+                </span>
                 <Link
                   to={`/movies/edit/${movie.id}`}
                   className='m-2 btn btn-success'>
@@ -84,7 +109,7 @@ const Movie = (props) => {
                     type='button'
                     className='m-2 btn btn-danger'
                     value='Delete'
-                    onClick={handleDelete}
+                    onClick={handleModal}
                   />
                 </span>
               </section>
